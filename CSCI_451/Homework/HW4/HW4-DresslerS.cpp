@@ -43,7 +43,7 @@ int main(){
     */
     cout << "Opening File for Output..." << endl;
     FILE *file_out = NULL;
-    file_out = fopen("HW4.out","w");
+    file_out = fopen("hw4.out","w");
     
     if(!file_out){
         perror("fopen");
@@ -79,7 +79,7 @@ int main(){
  */
 void * process_reading(void * arg){
     pthread_mutex_lock(&mux);
-    FILE * file_in = fopen("HW4.in", "r");
+    FILE * file_in = fopen("hw4.in", "r");
     cout << "Opening File for Input..."<<endl;
     cout <<"-----------------------------"<<endl;
     //Enter critical Section
