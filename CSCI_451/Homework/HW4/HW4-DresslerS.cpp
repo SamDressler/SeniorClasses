@@ -31,7 +31,7 @@ bool ready_to_write = false;
 bool finished = false;
 //Create instance of mutual exclusion
 pthread_mutex_t mux = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t cond;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 //struct to help with passing the out file to the function
 struct thread_data {
     FILE * out_file;
@@ -85,8 +85,6 @@ void * process_reading(void * arg){
     //Enter critical Section
     do{
         getNextInt(file_in);
-        
-        
     }while(!finished);
 
     pthread_exit(NULL);
@@ -137,7 +135,6 @@ void * process_writing(void * arg){
                 if(!finished){
                     pthread_mutex_unlock(&mux);
                     pthread_cond_signal(&cond);
-                    
                     pthread_cond_wait(&cond, &mux);
 
                 }else{
