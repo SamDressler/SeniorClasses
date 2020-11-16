@@ -10,7 +10,6 @@
 #include <vector>
 #include <regex>
 #include <iomanip>
-#include "lex_token_types.h"
 
 //Namepsace 
 using namespace std;
@@ -70,8 +69,7 @@ char * load_file(ifstream &file){
 				char_array[num_char] = temp_char;
 				num_char++;
 				delete [] temp_char_array;
-			}
-			
+			}		
 		}
 		//process \n 
 		else 
@@ -258,9 +256,13 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 	int width = 12;
 	int size = symbol_array.size();
 	string value;
+    string value_look_ahead;
+    string value_look_behind;
 	for(vector<string>::iterator it = symbol_array.begin(); it != symbol_array.end()-1; ++it)
 	{
+        value_look_behind = *(it-1);
 		value = *it;
+        value_look_ahead = *(it+1);
 		symbol s; 
 		
 		s.value = value;
