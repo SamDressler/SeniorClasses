@@ -32,7 +32,7 @@ rbrace }
 if_sym if
 litchar b
 greaterequal >=
-illegal 0ba
+number 0
 then_sym then
 identifier gcd
 assign :=
@@ -40,6 +40,7 @@ litchar a
 else_sym else
 identifier gcd
 assign :=
+identifier gcd
 lparen (
 litchar b
 comma ,
@@ -52,9 +53,8 @@ semicolon ;
 lbrace {
 identifier gcd
 rbrace }
-identifier bedgin
+begin_sym begin
 lbrace {
-minus -
 identifier example
 rbrace }
 read read
@@ -64,7 +64,7 @@ comma ,
 litchar y
 rparen )
 semicolon ;
-identifier wwrite
+write_sym write
 lparen (
 identifier gcd
 lparen (

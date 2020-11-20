@@ -5,8 +5,10 @@
 //This program takes in an input file and generates a list of lexeme-spelling pairs.
 //The program takes the loads the file, generate symbols, and then classifies them into
 // their appropriate lexemes.
-//The output is generated into "output.txt"
+//The output is generated into "output_lex.txt"
 #include "lexical_analyzer.h"
+#include "intermediate_code_generator.h"
+#include "driver.h"
 //Main Function to drive the modules.
 int main(int argc, char * argv []){
     //Check to see if the user input a file
@@ -25,29 +27,43 @@ int main(int argc, char * argv []){
     //read from the file all of the characters and return to main
     char * file_as_chars = load_file(file);
     //Print raw input file
-    cout << "--------------------------------"<<endl;
+    cout << "-------------------------------------------"<<endl;
     cout << "Contents of: "<<"\""<<argv[1]<<"\""<<endl;
-    cout << "--------------------------------"<<endl;
+    cout << "-------------------------------------------"<<endl;
     cout << file_as_chars << endl;
-    cout << "--------------------------------"<<endl;
-    vector<symbol> symbol_table = vector<symbol>(); 
+   cout << "-------------------------------------------"<<endl;
+    vector<symbol> lex_symbol_table = vector<symbol>(); 
+    vector<icg_symbol> icg_symbol_table = vector<icg_symbol>(); 
     vector<string> symbols = vector<string>();
     symbols = generate_symbols(file_as_chars);
-    symbol_table = classify_symbols(symbols, symbol_table);
-    FILE * output = NULL;
-    output = fopen("output.txt","w");
-        for(vector<symbol>::iterator it = symbol_table.begin(); it != symbol_table.end(); ++it)
+    lex_symbol_table = classify_symbols(symbols, lex_symbol_table);
+    FILE * output_lex = NULL;
+    output_lex = fopen("output_lex.txt","w");
+        for(vector<symbol>::iterator it = lex_symbol_table.begin(); it != lex_symbol_table.end(); ++it)
 	{
         symbol temp = *it;
+        icg_symbol s;
+        s.token_type = temp.token_type;
+        s.value = temp.value;
+        icg_symbol_table.push_back(s);
         const char * token_t = temp.token_type.c_str();
         const char * token = temp.value.c_str();
         //cout << left << setw(12) << temp.token_type <<  " -->    " << temp.value << endl;
-        fprintf(output,"%s %s\n",token_t, token);
+        fprintf(output_lex,"%s %s\n",token_t, token);
 
     }
-    cout << "Output file created" << endl;
-    cout << "--------------------------------"<<endl;
-    fclose(output);
+    cout << "Output file for lex created" << endl;
+    cout << "-------------------------------------------"<<endl;
+    cout << "Beginning Intermediate Code Generation " <<endl;
+    cout << "-------------------------------------------"<<endl;
+
+    generate_three_address_code(icg_symbol_table);
+
+
+
+
+
+    fclose(output_lex);
 
     return 0;
 }
