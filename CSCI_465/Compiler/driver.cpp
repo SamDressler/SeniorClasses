@@ -27,15 +27,19 @@ int main(int argc, char * argv []){
     //read from the file all of the characters and return to main
     char * file_as_chars = load_file(file);
     //Print raw input file
-    cout << "-------------------------------------------"<<endl;
-    cout << "Contents of: "<<"\""<<argv[1]<<"\""<<endl;
-    cout << "-------------------------------------------"<<endl;
+    cout << "---------------------------------------------------"<<endl;
+    cout << "          Contents of: "<<"\""<<argv[1]<<"\""<<endl;
+    cout << "---------------------------------------------------"<<endl;
     cout << file_as_chars << endl;
-   cout << "-------------------------------------------"<<endl;
+    cout << "---------------------------------------------------"<<endl;
     vector<symbol> lex_symbol_table = vector<symbol>(); 
     vector<icg_symbol> icg_symbol_table = vector<icg_symbol>(); 
     vector<string> symbols = vector<string>();
     symbols = generate_symbols(file_as_chars);
+    // for(vector<string>::iterator it = symbols.begin(); it < symbols.end(); ++it){
+    //     string temp = *it;
+    //     cout << "SYM : " << temp << endl;
+    // }
     lex_symbol_table = classify_symbols(symbols, lex_symbol_table);
     FILE * output_lex = NULL;
     output_lex = fopen("output_lex.txt","w");
@@ -52,15 +56,23 @@ int main(int argc, char * argv []){
         fprintf(output_lex,"%s %s\n",token_t, token);
 
     }
-    cout << "Output file for lex created" << endl;
-    cout << "-------------------------------------------"<<endl;
-    cout << "Beginning Intermediate Code Generation " <<endl;
-    cout << "-------------------------------------------"<<endl;
+    cout << "---------------------------------------------------"<<endl;
+    cout << "           Output file for lex created" << endl;
+    cout << "---------------------------------------------------"<<endl;
+    /*
+        beginning of code for version 2
+    */
+    cout << "---------------------------------------------------"<<endl;
+    cout << "       Beginning Intermediate Code Generation " <<endl;
+    cout << "---------------------------------------------------"<<endl;
 
     generate_three_address_code(icg_symbol_table);
-
-
-
+    cout << "---------------------------------------------------"<<endl;
+    cout << "Output file for intermediate code generation created" << endl;
+    cout << "---------------------------------------------------"<<endl;
+    cout << "               Symbol table: " << endl;
+    cout << "---------------------------------------------------"<<endl;
+    print_sym_table();
 
 
     fclose(output_lex);

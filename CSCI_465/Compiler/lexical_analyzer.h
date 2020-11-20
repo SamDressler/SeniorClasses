@@ -108,17 +108,31 @@ vector <string> generate_symbols(char * raw_input){
 	int width = 15;
 	symbol curr_sym; 
     vector<string> symbol_vec;
-	//go through the raw input and split up by spaces or by a token
+	//go through the raw input and split it up by spaces or by a token
 	char temp;
 	char temp_look_ahead;
 	string temp_word;
+	string temp_print_string;
 	for (int i = 0; i < num_char; i ++){
 	    temp = raw_input[i];
 		if((i+1) < num_char){
 			temp_look_ahead = raw_input[i+1];
 			//cout << temp_look_ahead << endl;
 		}
-
+		if(temp == '\"'){
+			temp_print_string += temp;
+			i++;
+			temp = raw_input[i];
+			while(temp != '\"'){
+				temp_print_string += temp;
+				i++;
+				temp = raw_input[i];
+			}
+			temp_print_string += temp;
+			symbol_vec.push_back(temp_print_string);
+			temp_print_string.clear();
+			continue;
+		}
 		if(temp == ' ' || temp =='\n'){
 			if(temp_word != " " && temp_word != ""){
 				//cout << temp_word << endl;
@@ -126,7 +140,6 @@ vector <string> generate_symbols(char * raw_input){
 			}
 			temp_word = "";
 		}
-		
 		//check if temp is in the set of the special characters
 		else if(symbols.find(temp) != std::string::npos){
 			if(temp_word != " " && temp_word != ""){
@@ -229,6 +242,11 @@ vector <string> generate_symbols(char * raw_input){
 			temp_word += temp;
 		}
 	}
+	//Print the string vector for verification
+	// for(vector<string>::iterator it = symbol_vec.begin(); it != symbol_vec.end(); ++it){
+	// 	string temp = *it;
+	// 	cout << temp << endl;
+	// }
 	return symbol_vec;
 }
 
@@ -253,26 +271,32 @@ string trim(string string)
 vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symbol_table)
 {
 	int i = 0;
+	// int k = 0;
 	int width = 12;
 	int size = symbol_array.size();
 	string value;
+	string temp; 
     string value_look_ahead;
     string value_look_behind;
 	for(vector<string>::iterator it = symbol_array.begin(); it != symbol_array.end()-1; ++it)
 	{
         value_look_behind = *(it-1);
 		value = *it;
+		// cout << value << endl;
         value_look_ahead = *(it+1);
-		symbol s; 
-		
+		symbol s;
 		s.value = value;
-		//cout <<"----------------------> "<< s.value << endl;
+		//cout <<"s val :"<< s.value << "!" << endl;
 
 			if(symbol_array[i].compare("") == 0){
 				continue;
 			}
 			else if(symbol_array[i].compare(" ")== 0){
 				continue;
+			}
+			else if(symbol_array[i].find("\"") != std::string::npos){
+				s.token_type = "quotestring";
+				symbol_table.push_back(s);
 			}
 			else if (symbol_array[i].compare("and") == 0){
 				s.token_type = "and_sym";
@@ -287,6 +311,11 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 			}
 			else if(symbol_array[i].compare("begin") == 0){
 				s.token_type = "begin_sym";
+				symbol_table.push_back(s);
+				// cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
+			}
+			else if(symbol_array[i].compare("end") == 0){
+				s.token_type = "end_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
@@ -310,11 +339,6 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
-			else if(symbol_array[i].compare("end") == 0){
-				s.token_type = "end_sym";
-				symbol_table.push_back(s);
-				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
-			}
 			else if(symbol_array[i].compare("if") == 0){
 				s.token_type = "if_sym";
 				symbol_table.push_back(s);
@@ -327,6 +351,11 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 			}
 			else if(symbol_array[i].compare("integer") == 0){
 				s.token_type = "integer_sym";
+				symbol_table.push_back(s);
+				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
+			}
+			else if(symbol_array[i].compare("real") == 0){
+				s.token_type = "real_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
@@ -373,7 +402,7 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(symbol_array[i].compare("read") == 0){
-				s.token_type = "read";
+				s.token_type = "read_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
