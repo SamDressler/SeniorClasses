@@ -109,6 +109,6 @@ int main(int argc, char ** argv){
     sem_close(sem2);
     sem_unlink("/sem0");
     sem_unlink("/sem1");
-    return 0;
+    return 0; // program ends here 
 
 }
