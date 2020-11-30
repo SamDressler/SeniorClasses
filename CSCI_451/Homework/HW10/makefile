@@ -13,4 +13,7 @@ all:
 	$(CC)  program3.cpp $(CC_FLAGS) -o program3
 
 clean:
-	rm -rf *.o hw10_p0
+	rm program0
+	rm program1
+	rm program2
+	rm program3
