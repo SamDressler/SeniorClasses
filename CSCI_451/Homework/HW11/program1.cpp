@@ -19,7 +19,8 @@ int main(int argc, char ** argv){
         return 1;
     }
 
-    cout << "In Program 1" << endl;
+    cout << "[Program 1] In Program 1" << endl;
+    sleep(1);
     //Get the filename from command line args
     const char * filename = argv[2];
     FILE *fin = fopen(filename, "r");
@@ -29,8 +30,7 @@ int main(int argc, char ** argv){
     }
     //Get the semname from command line args
     const char * semname = argv[1];
-    // sem1 = sem_open(semname, O_CREAT, 0600, 0);
-    sem1 = sem_open(semname, 0);
+    sem1 = sem_open(semname, O_CREAT, 0600, 1);
     if(sem1 == SEM_FAILED){
         cout << "ERROR : sem1 in program 1" << endl;
         return 3;
@@ -53,9 +53,10 @@ int main(int argc, char ** argv){
                 const char * word = tempw.c_str();
                 strncpy(buff, word, tempw.length()); //copy word to write buffer
                 write(p1_w, &buff, BUFF_SIZE); //write word from file to pipe 1
-                cout << "WRITING : " << buff << endl;
+                cout << "[Program 1] Writing to P1 : " << buff << endl;
                 memset(buff, 0, BUFF_SIZE); // clear buffer
                 sem_post(sem1);
+                sleep(1);
             }
             tempw.clear();
         }
@@ -69,10 +70,10 @@ int main(int argc, char ** argv){
 
     strcpy(buff, "END");
     write(p1_w, &buff, BUFF_SIZE);
-    cout << "WRITING : END" << endl;
+    // cout << "WRITING : END" << endl;
     sem_post(sem1);
 
-    cout << "Leaving Program 1" << endl;
+    cout << "[Program 1] Leaving Program 1" << endl;
     sem_unlink(semname);
     sem_close(sem1);
     close(p1_w);

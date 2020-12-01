@@ -24,6 +24,7 @@ sem_t * sem2;
 //0 - read
 int p1[2];
 int p2[2];
+//shared memory file descriptor
 int sm;
 int main(int argc, char ** argv){
     sem_unlink("/sem1");
@@ -63,14 +64,13 @@ int main(int argc, char ** argv){
     sprintf(p2_w, "%d", p2[1]);
 
     sm = shm_open("p11_sm", O_CREAT | O_RDWR, 0666);
+    const char * sm_name = "p11_sm";
     ftruncate(sm, 9);
     sprintf(sm_fd, "%d", sm);
 
     char const* prog1_args[6] = {"./program1", "/sem1", fin, p1_w, NULL};
-    //TODO: ADD SHARED MEM KEY
-    char const* prog2_args[7] = {"./program2", "/sem1", "/sem2", p1_r, p2_w, sm_fd, NULL};
-    //TODO: ADD SHARED MEM KEY
-    char const* prog3_args[6] = {"./program3", "/sem2", fout, p2_r, sm_fd, NULL};
+    char const* prog2_args[7] = {"./program2", "/sem1", "/sem2", p1_r, p2_w, sm_name, NULL};
+    char const* prog3_args[6] = {"./program3", "/sem2", fout, p2_r, sm_name, NULL};
 
     pid_t procs[3];
 
@@ -87,7 +87,6 @@ int main(int argc, char ** argv){
         sem_close(sem2); // Close and unlink sem 2 since its not used in program 1
         cout << prog1_args[0]<< " " << prog1_args[1] <<" " << prog1_args[2]
              << " " << prog1_args[3] << endl;
-        cout << "Starting program 1" << endl;
         execv(prog1_args[0], (char * const*)prog1_args);
     }
     
@@ -102,17 +101,8 @@ int main(int argc, char ** argv){
         //leave both semaphores open since they are both used in program 2
         cout << prog2_args[0] << " " << prog2_args[1] << " " << prog2_args[2] << " "
              << prog2_args[3] << " " << prog2_args[4] << " " << prog2_args[5] << endl;
-        cout << "Starting program 2" << endl;
         execv(prog2_args[0], (char * const*)prog2_args);
     }
-    //Wait for programs 1 and 2 to finish
-    while(wait(NULL) != -1 || errno != ECHILD){
-        ;
-    }
-        cout << "------------------------------------------" << endl;
-        cout << "Programs 1 and 2 have completed!" << endl;
-        cout << "------------------------------------------" << endl; 
-
     //Program 3
     if((procs[2] = fork()) < 0){
         cout << "ERROR : fork " << endl;
@@ -126,14 +116,16 @@ int main(int argc, char ** argv){
         sem_close(sem1); // Close and unlink sem 1 since its not used in program 1
         cout << prog3_args[0] << " " << prog3_args[1] << " " << prog3_args[2] 
              << " " << prog3_args[3] << " " << prog3_args[4] << endl;
-        cout << "Starting program 3" << endl;
+        cout << "------------------------------------------" << endl;
         execv(prog3_args[0], (char* const*)prog3_args);
     }
-    //Wait for program 3 to finish
+    //Wait for programs 1, 2, and 3 to finish.
     while(wait(NULL) != -1 || errno != ECHILD){
         ;
     }
-    cout << "Parent Process finished executing" << endl;
+    cout << "------------------------------------------" << endl; 
+    cout << "[Program 0] Programs 1, 2, and 3 completed" << endl; 
+    cout << "[Program 0] Parent Process finished executing" << endl;
     cout << "------------------------------------------" << endl; 
     //close the pipes and semaphores in the parent since they weren't used in this process.
     close(p1[0]);
@@ -144,6 +136,7 @@ int main(int argc, char ** argv){
     sem_close(sem2);
     sem_unlink("/sem1");
     sem_unlink("/sem2");
+    shm_unlink(sm_name);
     return 0; // program ends here 
 
 }
