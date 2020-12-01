@@ -12,12 +12,12 @@ sem_t sem1;
 int p1_w;
 
 int main(int argc, char ** argv){
-    if(argc < 3){
+
+    if(argc != 5){
         cout << "ERROR : invalid number of arguments" << endl;
         return 1;
     }
-    else{
-        cout << "yes 3" << endl;
-        sleep(2);
-    }
+
+    cout << "In Program 3" << endl;
+
 }
