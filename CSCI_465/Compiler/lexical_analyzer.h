@@ -298,6 +298,10 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 				s.token_type = "quotestring";
 				symbol_table.push_back(s);
 			}
+			else if(symbol_array[i].find("\'") != std::string::npos){
+				s.token_type = "quotestring";
+				symbol_table.push_back(s);
+			}
 			else if (symbol_array[i].compare("and") == 0){
 				s.token_type = "and_sym";
 				symbol_table.push_back(s);
@@ -579,6 +583,11 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 				////cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(regex_match(value, regex("\"([a-zA-Z0-9]+)\"") )){
+				s.token_type = "quotestring";
+				symbol_table.push_back(s);
+				////cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
+			}
+			else if(regex_match(value, regex("\'([a-zA-Z0-9]+)\'") )){
 				s.token_type = "quotestring";
 				symbol_table.push_back(s);
 				////cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
