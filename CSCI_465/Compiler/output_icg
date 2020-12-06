@@ -1,11 +1,7 @@
-call example_bad, null
-param x
-call printNumMinusThree, PL1
-writeln "Number minus three is: " new_line
-write temp
-y :=  
-write "Enter an integers: "
-x = read x 
+call example, PL1
+param a
+param b
+call gcd, PL2
 t0 = x + y  
 t1 = t0 * 4  
 result :=  
