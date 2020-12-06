@@ -1,12 +1,13 @@
-call example_bad, null
+call exampleGood, null
 param x
 call printNumMinusThree, PL1
+t0 := x - 3  
+temp :=  
 writeln "Number minus three is: " new_line
 write temp
-y :=  
+y := 10 
 write "Enter an integers: "
 x = read x 
-t0 = x + y  
-t1 = t0 * 4  
+t1 := x * y  
 result :=  
 write result
