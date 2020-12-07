@@ -1,18 +1,11 @@
 program exampleGood;
-var 
-    x, y : integer;
-    result : integer;
-procedure printNumMinusThree(x : integer);
-var temp : integer;
+var x, y : integer;
+var result : integer;
 begin 
-    temp := x - 3;
-    writeln("Number minus three is: ");
-    write(temp);
-end;
-begin 
+    x := 123;
     y := 10;
-    write("Enter an integers: ");
+    write('Enter an integer: ');
     read(x);
-    result := x * y;
+    result := x * y + x;
     write(result);
 end.

@@ -36,10 +36,10 @@ int main(int argc, char * argv []){
     vector<icg_symbol> icg_symbol_table = vector<icg_symbol>(); 
     vector<string> symbols = vector<string>();
     symbols = generate_symbols(file_as_chars);
-    // for(vector<string>::iterator it = symbols.begin(); it < symbols.end(); ++it){
-    //     string temp = *it;
-    //     cout << "SYM : " << temp << endl;
-    // }
+    for(vector<string>::iterator it = symbols.begin(); it < symbols.end(); ++it){
+        string temp = *it;
+        cout << "SYM : " << temp << endl;
+    }
     lex_symbol_table = classify_symbols(symbols, lex_symbol_table);
     FILE * output_lex = NULL;
     output_lex = fopen("output_lex.txt","w");
@@ -52,7 +52,7 @@ int main(int argc, char * argv []){
         icg_symbol_table.push_back(s);
         const char * token_t = temp.token_type.c_str();
         const char * token = temp.value.c_str();
-        //cout << left << setw(12) << temp.token_type <<  " -->    " << temp.value << endl;
+        cout << left << setw(12) << temp.token_type <<  " -->    " << temp.value << endl;
         fprintf(output_lex,"%s %s\n",token_t, token);
 
     }

@@ -133,9 +133,24 @@ vector <string> generate_symbols(char * raw_input){
 			temp_print_string.clear();
 			continue;
 		}
-		if(temp == ' ' || temp =='\n'){
+		if(temp == '\''){
+			temp_print_string += temp;
+			i++;
+			temp = raw_input[i];
+			while(temp != '\''){
+				temp_print_string += temp;
+				i++;
+				temp = raw_input[i];
+			}
+			temp_print_string += temp;
+			symbol_vec.push_back(temp_print_string);
+			temp_print_string.clear();
+			continue;
+		}
+		if(temp == ' ' || temp == '\n'){
+			// cout <<"t:"<< temp<<":t";
 			if(temp_word != " " && temp_word != ""){
-				//cout << temp_word << endl;
+				// cout << temp_word << endl;
 				symbol_vec.push_back(temp_word);
 			}
 			temp_word = "";
@@ -282,16 +297,20 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 	{
         value_look_behind = *(it-1);
 		value = *it;
-		// cout << value << endl;
+		// cout << "sym array i = "<< i << " : " <<symbol_array[i] << endl;
+		string entry = symbol_array[i];
+		// cout << "value : " << value <<"!"<< endl;
         value_look_ahead = *(it+1);
 		symbol s;
 		s.value = value;
 		//cout <<"s val :"<< s.value << "!" << endl;
 
 			if(symbol_array[i].compare("") == 0){
+				i++;
 				continue;
 			}
 			else if(symbol_array[i].compare(" ")== 0){
+				i++;
 				continue;
 			}
 			else if(symbol_array[i].find("\"") != std::string::npos){
@@ -299,8 +318,13 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 				symbol_table.push_back(s);
 			}
 			else if(symbol_array[i].find("\'") != std::string::npos){
-				s.token_type = "quotestring";
-				symbol_table.push_back(s);
+				if((strlen(symbol_array[i].c_str())-2) == 1){
+					s.token_type = "quotechar";
+					symbol_table.push_back(s);
+				}else{
+					s.token_type = "quotestring";
+					symbol_table.push_back(s);
+				}
 			}
 			else if (symbol_array[i].compare("and") == 0){
 				s.token_type = "and_sym";
@@ -313,7 +337,7 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
-			else if(symbol_array[i].compare("begin") == 0){
+			else if(entry.find("begin") == 0){
 				s.token_type = "begin_sym";
 				symbol_table.push_back(s);
 				// cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
@@ -590,7 +614,7 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 			else if(regex_match(value, regex("\'([a-zA-Z0-9]+)\'") )){
 				s.token_type = "quotestring";
 				symbol_table.push_back(s);
-				////cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
+				cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(i == size-1){
 				s.token_type = "eofsym";
