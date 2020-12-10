@@ -1,0 +1,7 @@
+start : simpleProgram
+LD R1, 9
+LD R2, 6
+ADD R1, R2, R3
+MUL R3, 6, R4
+MOV R5, R4
+stop : simpleProgram

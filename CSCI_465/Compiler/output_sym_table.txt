@@ -1,6 +1,6 @@
-y          | program    | simple               | 9          | integer    
-x          | program    | simple               | 6          | integer    
-result     | program    | simple               | t1         | integer    
-c          | program    | simple               | L          | char       
-t0         | temp       | simple               | x + y      | integer    
-t1         | temp       | simple               | t0 * 6     | integer    
+y          | program    | simpleProgram | 6          | integer    
+x          | program    | simpleProgram | 9          | integer    
+result     | program    | simpleProgram | t1         | integer    
+c          | program    | simpleProgram | L          | char       
+t0         | temp       | simpleProgram | x + y      | integer    
+t1         | temp       | simpleProgram | t0 * 6     | integer    

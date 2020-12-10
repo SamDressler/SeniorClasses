@@ -14,6 +14,7 @@
 //Namepsace 
 using namespace std;
 //Definitions
+string make_lowercase(string in);
 regex regex_identifier ("([_a-zA-Z])([a-zA-Z0-9]*){20}");
 regex regex_number ("([0-9]*)");
 string symbols = ".,:;()[]{}";
@@ -303,6 +304,7 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
         value_look_ahead = *(it+1);
 		symbol s;
 		s.value = value;
+		symbol_array[i] = make_lowercase(symbol_array[i]);
 		//cout <<"s val :"<< s.value << "!" << endl;
 
 			if(symbol_array[i].compare("") == 0){
@@ -327,78 +329,114 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 				}
 			}
 			else if (symbol_array[i].compare("and") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "and_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 
 			else if(symbol_array[i].compare("array") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "array_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
-			else if(entry.find("begin") == 0){
+			else if(symbol_array[i].find("begin") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "begin_sym";
 				symbol_table.push_back(s);
 				// cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
-			else if(symbol_array[i].compare("end") == 0){
+			else if(symbol_array[i].find("true") == 0){
+				s.value = make_lowercase(s.value);
+				s.token_type = "true_sym";
+				symbol_table.push_back(s);
+				// cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
+			}
+			else if(symbol_array[i].find("false") == 0){
+				s.value = make_lowercase(s.value);
+				s.token_type = "false_sym";
+				symbol_table.push_back(s);
+				// cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
+			}
+			else if(symbol_array[i].find("end") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "end_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(symbol_array[i].compare("char") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "char_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(symbol_array[i].compare("chr") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "chr";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(symbol_array[i].compare("do") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "do_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
-			else if(symbol_array[i].compare("else") == 0){
-				s.token_type = "else_sym";
+			else if(symbol_array[i].find("else") == 0){
+				s.value = make_lowercase(s.value);
+				if(value_look_ahead.find("if")==0){
+					s.value = "else if";
+					s.token_type = "else_if_sym";
+					it++;
+					i++;
+				}
+				else{
+					s.token_type = "else_sym";
+				}
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(symbol_array[i].compare("if") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "if_sym";
+				
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(symbol_array[i].compare("int") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "integer_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(symbol_array[i].compare("integer") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "integer_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(symbol_array[i].compare("real") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "real_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(symbol_array[i].compare("mod") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "mod_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(symbol_array[i].compare("not") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "not_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			//what is this
 			else if(symbol_array[i].compare("of") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "of_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
@@ -415,34 +453,40 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(symbol_array[i].compare("procedure") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "procedure_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(symbol_array[i].compare("function") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "function_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(symbol_array[i].compare("program") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "program_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(symbol_array[i].compare("read") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "read_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 
 			else if(symbol_array[i].compare("readln") == 0){
+				s.value = make_lowercase(s.value);
 				s.token_type = "readln_sym";
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 
-			else if(symbol_array[i].compare("then") == 0){
+			else if(symbol_array[i].find("then") == 0){
 				s.token_type = "then_sym";
+				s.value = make_lowercase(s.value);
 				symbol_table.push_back(s);
 				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
@@ -633,4 +677,10 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
     }
 
 	return symbol_table;
+}
+
+string make_lowercase(string in){
+	string out;
+	transform(in.begin(), in.end(), back_inserter(out),::tolower);
+	return out;
 }

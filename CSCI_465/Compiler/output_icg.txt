@@ -1,11 +1,8 @@
-call simple, null
-begin simple
-x = 6 
-y = 9 
+begin simpleProgram
+x = 9 
+y = 6 
 c = L 
 t0 = x + y  
 t1 = t0 * 6  
 result = t1 
-write 'Result is: '
-writeln result new_line
-end simple
+end simpleProgram

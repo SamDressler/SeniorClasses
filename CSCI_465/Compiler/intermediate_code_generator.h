@@ -5,10 +5,9 @@
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
-#include <unordered_map>
-#include <map>
 #include <bits/stdc++.h>
 #include <tuple>
+#include <queue>
 using namespace std;
 
 /*
@@ -21,6 +20,7 @@ struct param_list_node * param_list_head = NULL;
 struct param_list_node * param_list_tail = NULL;
 typedef tuple<string, string, string, string, string> sym_table_entry_t;
 
+sym_table_entry_t bad_entry = make_tuple("bad"," ", " ", " ", " ");
 vector<sym_table_entry_t> sym_table;
 string current_scope;
 string current_scope_id;
@@ -100,22 +100,27 @@ void edit_param_type(param_list_node *params, int param_num, string type);
 void write_three_ac_to_fout_icg(FILE* fout, string three_ac[7], int num_filled, int flag);
 void add_3_ac_node(string args[7], int num_filled);
 void print_list_of_param_lists();
-int handle_var_declaration(FILE * fout_icg, vector<icg_symbol>::iterator it, vector<icg_symbol> icg_sym_table);
+int handle_var_declaration(FILE *, vector<icg_symbol>::iterator , vector<icg_symbol>);
 void print_sym_table();
-int handle_io(FILE * fout_icg, vector<icg_symbol>::iterator it, vector<icg_symbol> icg_sym_table);
-int lookup(string search_val, int);
-int set_var_value(string id, string value_ptr);
+int handle_io(FILE *, vector<icg_symbol>::iterator, vector<icg_symbol>);
+int lookup(string, int);
+int set_var_value(string, string);
 string get_temp_var();
 string type_of_var(string);
+int handle_if_then(FILE *, vector<icg_symbol>::iterator, vector<icg_symbol>);
+sym_table_entry_t get_sym_table_entry(string );
+bool evaluate_condition(vector<icg_symbol>);
+int handle_while(FILE *, vector<icg_symbol>::iterator, vector<icg_symbol>);
+string get_var_value(string id);
 ///////////////////////////////
 void print_sym_table(){
     FILE * fout = fopen("output_sym_table.txt", "w");
     for(auto& tuple: sym_table){
-        printf("ID : %-12s | SCOPE : %-10s | SCOPE ID : %-20s | VALUE : %-10s | TYPE : %-10s \n",
+        printf("ID : %-12s | SCOPE : %-10s | SCOPE ID : %-10s | VALUE : %-10s | TYPE : %-10s \n",
                 get<0>(tuple).c_str(),get<1>(tuple).c_str(),
                 get<2>(tuple).c_str(),get<3>(tuple).c_str(),
                 get<4>(tuple).c_str());
-        fprintf(fout, "%-10s | %-10s | %-20s | %-10s | %-10s \n",
+        fprintf(fout, "%-10s | %-10s | %-10s | %-10s | %-10s \n",
                 get<0>(tuple).c_str(),get<1>(tuple).c_str(),
                 get<2>(tuple).c_str(),get<3>(tuple).c_str(),
                 get<4>(tuple).c_str());
@@ -141,6 +146,7 @@ void generate_three_address_code(vector<icg_symbol> icg_sym_table){
     vector<icg_symbol>::iterator it_next;
     for(it = icg_sym_table.begin(); it != icg_sym_table.end(); ++it){
         temp = *it;
+
         string t_type = temp.token_type;
         string v_value = temp.value;
         if(it != icg_sym_table.begin()){
@@ -176,13 +182,15 @@ void generate_three_address_code(vector<icg_symbol> icg_sym_table){
                 if(offset == -1){exit(-1);}                
                 it += offset-1;
             }
+            //Handle begin sym for programs, procedures, or functions,
+            //Note this does not handle begin or end symbols involved in loops 
             else if(t_type.compare("begin_sym")==0){
                 current_scope_id = scope_stack.top();
                 cout << "Current Scope : " << current_scope_id << endl;
                 string tac[7];
                 tac[0] = "begin";
                 tac[1] = current_scope_id;
-                cout << "t0" << tac[0] << "t1" << tac[1] << endl;
+               // cout << "t0" << tac[0] << "t1" << tac[1] << endl;
                 write_three_ac_to_fout_icg(fout_icg,tac,2,8);
             }
             else if(t_type.compare("end_sym") == 0){
@@ -195,7 +203,7 @@ void generate_three_address_code(vector<icg_symbol> icg_sym_table){
                 if(!scope_stack.empty()){
                     current_scope_id = scope_stack.top();
                 }
-                cout << "t0" << tac[0] << "t1" << tac[1] << endl;
+                // cout << "t0" << tac[0] << "t1" << tac[1] << endl;
                 write_three_ac_to_fout_icg(fout_icg, tac, 2, 9);
                 //cout << "Current Scope : " <<current_scope_id << endl;
             }
@@ -208,11 +216,6 @@ void generate_three_address_code(vector<icg_symbol> icg_sym_table){
                 if(offset == -1){exit(-1);}   
                 it += offset-1;
             }
-            /*
-                Handle Simplified expressions
-            */
-
-
             /*
                 Handle Assignment statements 
                 -Take in a icg_symbol table entry and produce 3 address code for it
@@ -235,9 +238,28 @@ void generate_three_address_code(vector<icg_symbol> icg_sym_table){
                 offset = handle_io(fout_icg, it, icg_sym_table);
                 it += offset-1;
             }
+            /*
+            *   Handle if then statements
+            */
+            
+            else if(t_type.compare("if_sym") == 0){
+                offset = handle_if_then(fout_icg, it, icg_sym_table);
+                it += offset-1;
+            }
+            /*
+            *   Handle While Loops
+            */
+            else if(t_type.compare("while_sym") == 0){
+                offset+= handle_while(fout_icg, it, icg_sym_table);
+                it += offset-1;
+
+            }
             else if(t_type.compare("period") == 0){
                 cout << "---------------------------------------------------"<<endl;
                 cout << "Intermediate Code Generation Complete" << endl;
+            }
+            else if(t_type.compare("semicolon")==0){
+
             }
             else if(t_type.compare("illegal") == 0){
                 cout << "ERROR : unrecognized token" << endl;
@@ -247,6 +269,306 @@ void generate_three_address_code(vector<icg_symbol> icg_sym_table){
            }
     }
     fclose(fout_icg);
+}
+int handle_while(FILE * fout_icg, vector<icg_symbol>::iterator it, vector<icg_symbol>icg_symbol_table){
+    cout << "---------------------------------------------------\n";
+    cout << "           Handling While Loops\n";
+    vector<icg_symbol>::iterator loop_start; // Once the condition is evaluated the pointer is set to the index after the conditional
+    vector<icg_symbol> cond = vector<icg_symbol>();
+    while(1){
+        
+    }
+
+}
+int handle_if_then(FILE * fout_icg, vector<icg_symbol>::iterator it, vector<icg_symbol>icg_symbol_table){
+    cout << "---------------------------------------------------\n";
+    cout << "           Handling If-Then Statements\n";
+    int offset = 0; int offset2 = 0;
+    vector<icg_symbol>::iterator start_iterator = it;
+    vector<icg_symbol>::iterator it2 = it;
+    vector<icg_symbol>::iterator it_prev;vector<icg_symbol>::iterator it_next;
+
+    
+    icg_symbol sym = *it2;
+    vector<icg_symbol> cond_expr = vector<icg_symbol>();
+    /**
+     * We need to determine what the conditional statement is,
+     *  evaluate the conditional,
+     * and then decide what is written to the icg_symbol table
+     */ 
+    //PART 1: GET THE first CONDITIONAL i.e. if x = y then S1 
+    while(1){
+
+        it2++;offset++;
+        sym = *it2;
+        cond_expr.push_back(sym);
+        if(sym.token_type.compare("then_sym")==0){
+            it2++;offset++;
+            sym = *it2;
+            break;
+        }
+    }
+
+    if(evaluate_condition(cond_expr) == true){
+        cout << "RETURNED TRUE" << endl;
+        while(1){
+            if(it2 != icg_symbol_table.begin()){
+                it_prev = it2-1;
+            }
+            if((it2+1) != icg_symbol_table.end()){
+                it_next = it2+1;
+            }
+            if(sym.token_type.compare("begin_sym")== 0){
+                // cout << "BEGIN : " << sym.value << endl;
+                it2++;offset++;
+                sym = *it2;
+            }
+            else if((sym.token_type.compare("identifier") == 0) || (sym.token_type.compare("litchar") == 0)){
+                // cout << sym.token_type << " : " << sym.value << endl;
+                it2++;offset++;
+                sym = *it2;
+                if(sym.token_type.compare("assign") == 0){
+                    if(it2 != icg_symbol_table.begin()){
+                        it_prev = it2-1;
+                    }
+                    if((it2+1) != icg_symbol_table.end()){
+                        it_next = it2+1;
+                    }
+                    // cout << "SYM before Assign : " << sym.token_type << endl;
+                    offset2 += handle_assignment(fout_icg, it_prev, it_next, icg_symbol_table);
+                    offset+= offset2;
+                    //set the location to the original location plus the gained offset
+                    it2 += offset2 - 1; sym = *it2;
+                    // cout << "SYM after Assign : " << sym.token_type << endl;
+                    // cout << "SYM : " << sym.token_type << endl;
+                }
+                else{
+                    cout << "ERROR : Unexpected token " << sym.token_type << endl;
+                    exit(-1);
+                }
+            }
+            else if(sym.token_type.compare("write_sym") == 0 || sym.token_type.compare("read_sym") == 0){
+                offset2 += handle_io(fout_icg, it2, icg_symbol_table);
+                offset += offset2;
+                it2+= offset2;
+                sym = *it2;
+            }
+            else if(sym.token_type.compare("writeln_sym") == 0 || sym.token_type.compare("readln_sym") == 0){
+                // cout << "SYM before WRITELN " << sym.token_type << endl;
+                offset2 += handle_io(fout_icg, it2, icg_symbol_table);
+                offset += offset2;
+                it2+= offset2-1;
+                sym = *it2;
+                // cout << "SYM AFTER WRITELN " << sym.token_type << endl;
+            }
+            else if(sym.token_type.compare("end_sym") == 0){
+                it2++;offset++;sym=*it2;
+                if((sym.token_type.compare("else_sym")==0) || (sym.token_type.compare("else_if_sym") == 0)){
+                    it2++;offset++;sym=*it2;
+                    while(1){
+                        if(sym.token_type.compare("end_sym")==0){
+                            // cout << "BEFORE RETURN : " << sym.token_type << endl;
+                            // it2++;offset++;sym=*it2;
+                            // cout << "BEFORE RETURN : " << sym.token_type << endl;
+                            cout << "               Leaving If-Else Section" << endl;
+                            cout << "---------------------------------------------------\n";
+                            return offset;
+                        }else { it2++;offset++;sym=*it2; }
+                    }
+                }
+                else{
+                    cout << "               Leaving If-Else Section" << endl;
+                    cout << "---------------------------------------------------\n";
+                    return offset;
+                }
+                //Skip the else section
+            }
+            else{
+                cout << "ERROR : Invalid Token : "<< sym.token_type << endl;
+                it2++;offset++;
+                sym = *it2;
+            }
+        }
+    }
+    else{
+        cout << "RETURNED FALSE" << endl;
+        //SKIP THE PORTION FOR IF STATEMENT
+        if(sym.token_type.compare("begin_sym") == 0){
+            while(1){
+                if(sym.token_type.compare("end_sym") == 0 ){
+                    it2++;offset++;sym = *it2;
+                    break;
+                }else {it2++;offset++;sym=*it2;}
+            }
+        }
+        else{
+            cout << "NO BEGIN STATEMENT" << endl;
+            return offset;
+        }
+        if(sym.token_type.compare("else_sym")== 0){
+            // cout << "IN ELSE " << endl;
+            it2++;offset++; sym= *it2;
+            if(sym.token_type.compare("begin_sym")==0){
+                // cout << "IN BEGIN SECTION" << endl;
+                it2++;offset++; sym = *it2;
+                while(1){
+                    if(sym.token_type.compare("end_sym") == 0){
+                        offset++;
+                        break;
+                    }
+                    else{
+                        // cout << "IN WHILE " << sym.token_type << endl;
+                        if((sym.token_type.compare("identifier") == 0) || (sym.token_type.compare("litchar") == 0))
+                        {
+                            // cout << "HERE " << endl;
+                            // cout << sym.token_type << " : " << sym.value << endl;
+                            it2++;offset++;
+                            sym = *it2;
+                            if(sym.token_type.compare("assign") == 0){
+                                // cout << " IN ASSIGN " << endl;
+                                if(it2 != icg_symbol_table.begin()){
+                                    it_prev = it2-1;
+                                    sym = *it_prev;
+                                    // cout << "IT_PREV AFTER ASSIGN SYM DETECTED : " << sym.token_type<<endl;
+                                }
+                                if((it2+1) != icg_symbol_table.end()){
+                                    it_next = it2+1;
+                                    sym = *it_next;
+                                    // cout << "IT_PREV AFTER ASSIGN SYM DETECTED : " << sym.token_type<<endl;
+                                }
+                                sym = *it_prev;
+                                sym = *it_next;
+                                offset2 += handle_assignment(fout_icg, it_prev, it_next, icg_symbol_table);
+                                offset+= offset2;
+                                //set the location to the original location plus the gained offset
+                                it2 += offset2 - 1; sym = *it2;
+                                // cout << "SYM : " << sym.token_type << endl;
+                            }
+                            else{
+                                cout << "ERROR : Unexpected token " << sym.token_type << endl;
+                                exit(-1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        //NOT REQUIRED BUT I HANDLED IT IN LEXOR SO I ADDED IT HERE AS WELL 
+        else if(sym.token_type.compare("else_if_sym") == 0){
+            cout << "ELSE IF - ERROR : currently unsupported" << endl;
+            it2++;offset++; sym= *it2;
+            exit(0);
+        }
+        else{
+            cout << "NO ELSE-type STATEMENTS" << endl;
+        }
+    }
+    cout << "               Leaving If-Else Section" << endl;
+    cout << "---------------------------------------------------\n";
+    return offset;
+}
+bool evaluate_condition(vector<icg_symbol> cond){
+    icg_symbol sym;
+    sym_table_entry_t temp;
+    sym_table_entry_t var1; sym_table_entry_t var2;
+    vector<sym_table_entry_t> vars;
+    string var_type = "empty";
+    string op = "empty"; string t_type; string value;
+    for(vector<icg_symbol>::iterator it = cond.begin(); it < cond.end(); ++it){
+        sym = *it;
+        t_type = sym.token_type;
+        value = sym.value;
+        if((t_type.compare("litchar") == 0) || (t_type.compare("identifier")==0)){
+            temp = get_sym_table_entry(value);
+            if(get<0>(temp).compare("bad") == 0){
+                cout << "ERROR : Variable not declared : " << value << endl;
+                exit(-1);//EXIT since if this outcome occurs the code is ambiguous
+            }
+            else{
+                vars.push_back(temp);
+                if(var_type.compare("empty") == 0){
+                    var_type = get<4>(temp);
+                }
+                else if(get<4>(temp).compare(var_type)!=0){
+                    cout << "ERROR : Implicit conditional." <<
+                    " Type 1 : " << get<4>(temp) << " Type 2 : "<< var_type << endl;
+                    exit(-1);
+                }
+            }
+        }
+        else if(sym.token_type.compare("equals") == 0){
+            if(op.compare("empty") == 0 ){
+                op = value;
+            }
+            else{
+                cout << "ERROR : Invalid Operator " << endl;
+                exit(-1);
+            }
+        }
+        else if((t_type.compare("greater") == 0) || (t_type.compare("greaterequal") == 0) ||
+                (t_type.compare("less") == 0) || (t_type.compare("lessequal") == 0) ){
+            if(op.compare("empty") == 0 ){
+                op = value;
+
+            }
+            else{
+                cout << "ERROR : Invalid Operator " << endl;
+                exit(-1);
+            }
+        }
+        else if(sym.token_type.compare("true_sym") == 0){
+            return true;
+        }
+        else if(sym.token_type.compare("false_sym") == 0){
+            return false;
+        }
+        else if(sym.token_type.compare("then_sym") == 0){
+            break;    
+        }
+        else
+        {
+            cout << "ERROR : Conditional Statement Invalid" << endl;
+            exit(-1);
+        }
+    }
+    //FOR NOW JUST EVALUATE SIMPLE CONDITIONAL FOR NOW
+    var1 = vars.front();
+    var2 = vars.back();
+    if(op.compare("=") == 0){
+        if(get<3>(var1) == get<3>(var2)){
+            return true;
+        }return false;
+    }
+    else if(op.compare(">") == 0){
+        if(get<3>(var1) > get<3>(var2)){
+            return true;
+        }return false;
+    }
+    else if(op.compare(">=") == 0){
+        if(get<3>(var1) >= get<3>(var2)){
+            return true;
+        }return false;
+    }
+    else if(op.compare("<") == 0){
+        if(get<3>(var1) < get<3>(var2)){
+            return true;
+        }return false;
+    }
+    else if(op.compare("<=") == 0){
+        if(get<3>(var1) <= get<3>(var2)){
+            return true;
+        }return false;
+    }
+}
+
+sym_table_entry_t get_sym_table_entry(string id){
+    for(vector<sym_table_entry_t>::iterator it = sym_table.begin(); it < sym_table.end(); ++it){
+        sym_table_entry_t temp = *it;
+        if ((get<0>(temp).compare(id) == 0)){
+            return temp;
+        }
+    }
+    return bad_entry;
 }
 int handle_io(FILE * fout_icg, vector<icg_symbol>::iterator it, vector<icg_symbol> icg_sym_table){
     cout << "---------------------------------------------------"<<endl;
@@ -281,6 +603,8 @@ int handle_io(FILE * fout_icg, vector<icg_symbol>::iterator it, vector<icg_symbo
                     it2++;offset++;
                     sym=*it2;
                     if(sym.token_type.compare("semicolon") == 0){
+                        it2++;offset++;
+                        sym = *it2;
                         // cout << "writing tac to fout_icg for write|writeln " <<endl;
                         write_three_ac_to_fout_icg(fout_icg, tac, num_filled, flag);
                     }
@@ -436,6 +760,10 @@ int handle_var_declaration(FILE * fout_icg, vector<icg_symbol>::iterator it, vec
                         sym = *it2;
                     }
                 }
+                else{
+                    cout << "ERROR Invalid type : " << sym.value << endl;
+                    return -1;
+                }
             }
             else if(sym.token_type.compare("comma")==0){
                 it2++;offset++;
@@ -478,6 +806,7 @@ int handle_assignment(FILE * fout, vector<icg_symbol>::iterator dest, vector<icg
     icg_symbol sym = *it2;
     string current_id;
     string set_value;
+    string set_value_type= "null";
     string temp_var = "";
     string prev_temp_var = "";
     string src_type;
@@ -489,7 +818,7 @@ int handle_assignment(FILE * fout, vector<icg_symbol>::iterator dest, vector<icg
     // cout << "sym val: " << sym.value << endl;
     if(lookup(sym.value, 1) < 0 ){
         cout << "ERROR : undefined reference to : " << sym.value << endl;
-        // exit(-1);
+        exit(-1);
     }
     else{
         current_id = sym.value;
@@ -514,6 +843,16 @@ int handle_assignment(FILE * fout, vector<icg_symbol>::iterator dest, vector<icg
             else if(sym.token_type == "quotechar"){
                 set_value = sym.value.at(1);
                 src_type = "char";
+            }
+            else if(sym.token_type == "identifier"){
+                set_value = sym.value;
+                set_value_type = sym.token_type;
+                src_type = type_of_var(sym.value);
+            }
+            else if(sym.token_type == "litchar"){
+                set_value = sym.value;
+                set_value_type = sym.token_type;
+                src_type = type_of_var(sym.value);
             }
             // else if((sym.token_type != "litchar") && (sym.token_type != "identifier") && (sym.token_type != "mod_sym")){
             //             cout << "ERROR : epected semicolon after expression" << endl;
@@ -629,27 +968,29 @@ int handle_assignment(FILE * fout, vector<icg_symbol>::iterator dest, vector<icg
                                     if(sym.token_type.compare("rparen")==0){
                                         it2++;offset++;
                                         sym = *it2;
-                                        string temp_label = get_temp_var();
-                                        // cout << "TEMP VAR : " << temp_label << endl;
+                                        // cout << "OFFSET " << offset << endl;
+                                            string temp_label = get_temp_var();
+                                            // cout << "TEMP VAR : " << temp_label << endl;
 
-                                        set_var_value(temp_label, set_value);
-                                        tac[0] = temp_label;
-                                        tac[1] = "=";
-                                        tac[2] = set_value;
-                                        write_three_ac_to_fout_icg(fout, tac, 3, 7);
-                                        set_value.clear();
-                                        if(temp_label.compare("") == 0){
-                                            // cout << "here 2" << endl;
-                                            temp_label = temp_label;
-                                        }
-                                        else{
-                                            // cout << "here 3" << endl;
-                                            string swap;
-                                            swap = temp_var;
-                                            temp_var = temp_label;
-                                            prev_temp_var = temp_var;
-                                            prev_temp_set = true;
-                                        }
+                                            set_var_value(temp_label, set_value);
+                                            tac[0] = temp_label;
+                                            tac[1] = "=";
+                                            tac[2] = set_value;
+                                            write_three_ac_to_fout_icg(fout, tac, 3, 7);
+                                            set_value.clear();
+                                            if(temp_label.compare("") == 0){
+                                                // cout << "here 2" << endl;
+                                                temp_label = temp_label;
+                                            }
+                                            else{
+                                                // cout << "here 3" << endl;
+                                                string swap;
+                                                swap = temp_var;
+                                                temp_var = temp_label;
+                                                prev_temp_var = temp_var;
+
+                                                prev_temp_set = true;
+                                            }
                                     }
                                 }
                             }
@@ -673,6 +1014,8 @@ int handle_assignment(FILE * fout, vector<icg_symbol>::iterator dest, vector<icg
                         if(sym.token_type.compare("semicolon")==0){
                             it2++;offset++;
                             sym = *it2;
+                            // cout << "OFFSET 2 : " << offset << endl;
+                            // cout << "SYM " << sym.value << endl;
                             string temp_label = get_temp_var();
                             // cout << "TEMP VAR : " << temp_label << endl;
 
@@ -711,25 +1054,36 @@ int handle_assignment(FILE * fout, vector<icg_symbol>::iterator dest, vector<icg
             write_three_ac_to_fout_icg(fout, tac, 3, 7);
         }
         else{
+            // cout << "current ID " << current_id << endl;
+            // cout << "set val : " << set_value<<endl;
             dest_type = type_of_var(current_id);
             if(dest_type.compare(src_type) == 0){
-                //cout << "setval : " << set_value << endl;
-                set_var_value(current_id , set_value); // replace the undefined status in the symbol table with the correct value
-                tac[0] = current_id;
-                tac[1] = "=";
-                tac[2] = set_value;
-                write_three_ac_to_fout_icg(fout, tac, 3, 7); // write the assignment to the TAC fout_icg that will be used for generating code
-            }
 
+                if((set_value_type.compare("identifier")==0) || set_value_type.compare("litchar")==0){
+                    set_value = get_var_value(set_value);
+                    set_var_value(current_id , set_value); // replace the undefined status in the symbol table with the correct value
+                    tac[0] = current_id;
+                    tac[1] = "=";
+                    tac[2] = set_value;
+                    write_three_ac_to_fout_icg(fout, tac, 3, 7); // write the assignment to the TAC fout_icg that will be used for generating code
+                }else{
+                    set_var_value(current_id , set_value); // replace the undefined status in the symbol table with the correct value
+                    tac[0] = current_id;
+                    tac[1] = "=";
+                    tac[2] = set_value;
+                    write_three_ac_to_fout_icg(fout, tac, 3, 7); // write the assignment to the TAC fout_icg that will be used for generating code
+                }
+                // cout << "setval : " << set_value << endl;
+                
+            }
             else{
                 cout << "ERROR : Implicit conversion from " << src_type << " to : " << dest_type << endl;
-                // exit(-1);
+                exit(-1);
             }
 
         }
-
-        cout << endl;
     }
+    // cout << offset << endl;
     //Need to do varaible declarations and expressions first
     return offset;
 }
@@ -756,13 +1110,31 @@ int set_var_value(string id, string value_ptr){
             tie(idd, scope, scope_id, val, type) = temp1;
             val = value_ptr;
             temp2 = make_tuple(id,scope,scope_id,val,type);
-            cout << "New Val : " <<get<3>(temp2) << endl;
+            cout << "New Val Of " << idd << " = " <<get<3>(temp2) << endl;
             replace(sym_table.begin(), sym_table.end(), temp1, temp2);
             return 0;
         }
     }
     return 0;
 }
+string get_var_value(string id){
+    //ID       scope type       scope ID         value       type
+    string idd, scope, scope_id, val, type;
+    cout << "here" << endl;
+    for(vector<sym_table_entry_t>::iterator it = sym_table.begin(); it < sym_table.end(); ++it){
+        sym_table_entry_t temp1 = *it;
+        if ((get<0>(temp1).compare(id) == 0)){
+            cout << "FOUND : "<<get<3>(temp1) << endl;
+            return get<3>(temp1);
+        }
+    }
+    cout << "not found" << endl;
+    return "empty";
+}
+
+//ID : variable being looked up
+//MODE: 1 - check if variable exists in current scope
+//      2 - check to see if temp variables exist, if not push back on vector 
 int lookup(string id, int mode){
     //
     // cout << "SEARCH VAL : " << id << " CURRENT SCOPE ID: " << current_scope_id << endl;
@@ -795,10 +1167,11 @@ int lookup(string id, int mode){
                 }
             }
                                             //ID  scope type   scope ID         value       type
-        sym_table_entry_t entry = make_tuple(id, "temp", current_scope_id, "undefined", "integer");
-        cout << "Adding " << id << " to symbol table" << endl;
-        sym_table.push_back(entry);
-        return 0;
+            sym_table_entry_t entry = make_tuple(id, "temp", current_scope_id, "undefined", "integer");
+            cout << "Adding " << id << " to symbol table" << endl;
+            sym_table.push_back(entry);
+            return 0;
+        break;
     }
     //check if its in the scope;
     return -1;
@@ -1114,20 +1487,20 @@ void write_three_ac_to_fout_icg(FILE *fout, string tac[7], int num_filled, int m
             for(i = 0; i < num_filled-2; i ++){
                 // cout << tac[i] << endl;
                 if(i == 1){
-                    fprintf(fout, "%s, ", tac[i].c_str());    
+                    // fprintf(fout, "%s ", tac[i].c_str());    
                 }
                 else{
-                    fprintf(fout, "%s ", tac[i].c_str());
+                    // fprintf(fout, "%s ", tac[i].c_str());
                 }
             }
             // cout << tac[i] << endl;
-                fprintf(fout, "%s\n",tac[num_filled-2].c_str());        
+                // fprintf(fout, "%s\n",tac[num_filled-2].c_str());        
         break;
         //case procedure with parameters
         case 1:
              tac[num_filled-1] = "procedure";
             // cout <<"added id : "  << tac[num_filled-1] << endl;
-            temp= find_param_list(tac[2]);//index two is the param list identifier
+            temp = find_param_list(tac[2]);//index two is the param list identifier
             current_param = temp->list_head;
             add_3_ac_node(tac, num_filled);
             if(current_param != NULL){ //if the list node has any params
@@ -1145,7 +1518,7 @@ void write_three_ac_to_fout_icg(FILE *fout, string tac[7], int num_filled, int m
             for(i = 0; i < num_filled-2; i ++){
                 // cout << tac[i] << endl;
                 if(i == 1){
-                    fprintf(fout, "%s, ", tac[i].c_str());    
+                    fprintf(fout, "%s ", tac[i].c_str());    
                 }
                 else{
                     fprintf(fout, "%s ", tac[i].c_str());
@@ -1296,7 +1669,6 @@ string get_param_list_label(){
     }
     return param_list_tail->label; 
 }
-
 void add_param_to_list(param_list_node * params, string id, string type, int param_num){
     param_node * temp = new param_node;
     temp->next = NULL;

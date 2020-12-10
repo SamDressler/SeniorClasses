@@ -8,6 +8,7 @@
 //The output is generated into "output_lex.txt"
 #include "lexical_analyzer.h"
 #include "intermediate_code_generator.h"
+#include "final_code_generator.h"
 #include "driver.h"
 //Main Function to drive the modules.
 int main(int argc, char * argv []){
@@ -24,8 +25,10 @@ int main(int argc, char * argv []){
         cout << "Error file: "<<"\""<<argv[1]<<"\""<<" could not be opened"<<endl;
         exit(0);
     }
+
     //read from the file all of the characters and return to main
     char * file_as_chars = load_file(file);
+
     //Print raw input file
     cout << "---------------------------------------------------"<<endl;
     cout << "          Contents of: "<<"\""<<argv[1]<<"\""<<endl;
@@ -35,12 +38,18 @@ int main(int argc, char * argv []){
     vector<symbol> lex_symbol_table = vector<symbol>(); 
     vector<icg_symbol> icg_symbol_table = vector<icg_symbol>(); 
     vector<string> symbols = vector<string>();
+
+    //Generate Symbol vector from array file array of characters
     symbols = generate_symbols(file_as_chars);
+
     for(vector<string>::iterator it = symbols.begin(); it < symbols.end(); ++it){
         string temp = *it;
-        cout << "SYM : " << temp << endl;
+        // cout << "SYM : " << temp << endl;
     }
+
+    //Classify the raw symbols and remove unnecessary symbols
     lex_symbol_table = classify_symbols(symbols, lex_symbol_table);
+
     FILE * output_lex = NULL;
     output_lex = fopen("output_lex.txt","w");
         for(vector<symbol>::iterator it = lex_symbol_table.begin(); it != lex_symbol_table.end(); ++it)
@@ -56,6 +65,7 @@ int main(int argc, char * argv []){
         fprintf(output_lex,"%s %s\n",token_t, token);
 
     }
+    fclose(output_lex);
     cout << "---------------------------------------------------"<<endl;
     cout << "           Output file for lex created" << endl;
     cout << "---------------------------------------------------"<<endl;
@@ -73,9 +83,13 @@ int main(int argc, char * argv []){
     cout << "               Symbol table: " << endl;
     cout << "---------------------------------------------------"<<endl;
     print_sym_table();
+    cout << "---------------------------------------------------"<<endl;
+    cout << "       Beginning Final Code Generation " << endl;
+    fcg_driver();
 
 
-    fclose(output_lex);
+
+    
 
     return 0;
 }
