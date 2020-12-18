@@ -1,8 +1,31 @@
 begin simpleProgram
-x = 9 
-y = 6 
-c = L 
-t0 = x + y  
-t1 = t0 * 6  
-result = t1 
+writeln "Hello Dr. Reza"
+x := 9 
+y := 6 
+c := L 
+if x > y 
+jump else
+L0
+tmp0 := x + y  
+tmp1 := tmp0 * 6  
+result := tmp1 
+jump end_if
+else
+L1
+tmp2 := x * 5  
+result := tmp2 
+jump end_if
+end_if
+L2
+writeln result
+arr[1] := 10 
+arr[2] := 5 
+tmp3 := arr[1] + arr[2]  
+sum := tmp3 
+writeln 'Enter your favorite integer: '
+x := readln x  new_line
+writeln x
+writeln '\nGood Bye and '
+writeln 'Happy Holidays!'
+write c
 end simpleProgram

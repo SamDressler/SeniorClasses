@@ -1,0 +1,188 @@
+int handle_if_then(FILE * fout_icg, vector<icg_symbol>::iterator it, vector<icg_symbol>icg_symbol_table){
+    cout << "---------------------------------------------------\n";
+    cout << "           Handling If-Then Statements\n";
+    int offset = 0; int offset2 = 0;
+    vector<icg_symbol>::iterator start_iterator = it;
+    vector<icg_symbol>::iterator it2 = it;
+    vector<icg_symbol>::iterator it_prev;vector<icg_symbol>::iterator it_next;
+
+    string cond_string;
+    icg_symbol sym = *it2;
+    vector<icg_symbol> cond_expr = vector<icg_symbol>();
+    /**
+     * We need to determine what the conditional statement is,
+     *  evaluate the conditional,
+     * and then decide what is written to the icg_symbol table
+     */ 
+    //PART 1: GET THE first CONDITIONAL i.e. if x = y then S1 
+    while(1){
+        cond_string += (sym.value+ " ");
+        it2++;offset++;
+        sym = *it2;
+        cond_expr.push_back(sym);
+        if(sym.token_type.compare("then_sym")==0){
+            it2++;offset++;
+            sym = *it2;
+            break;
+        }
+    }
+    fprintf(fout_icg, "%s\n", cond_string.c_str());
+    fprintf(fout_icg, "L%d\n",++current_label_num);
+    if(evaluate_condition(cond_expr) == true){
+        cout << "RETURNED TRUE" << endl;
+        while(1){
+            if(it2 != icg_symbol_table.begin()){
+                it_prev = it2-1;
+            }
+            if((it2+1) != icg_symbol_table.end()){
+                it_next = it2+1;
+            }
+            if(sym.token_type.compare("begin_sym")== 0){
+                // cout << "BEGIN : " << sym.value << endl;
+                it2++;offset++;
+                sym = *it2;
+            }
+            else if((sym.token_type.compare("identifier") == 0) || (sym.token_type.compare("litchar") == 0)){
+                // cout << sym.token_type << " : " << sym.value << endl;
+                it2++;offset++;
+                sym = *it2;
+                if(sym.token_type.compare("assign") == 0){
+                    if(it2 != icg_symbol_table.begin()){
+                        it_prev = it2-1;
+                    }
+                    if((it2+1) != icg_symbol_table.end()){
+                        it_next = it2+1;
+                    }
+                    // cout << "SYM before Assign : " << sym.token_type << endl;
+                    offset2 += handle_assignment(fout_icg, it_prev, it_next, icg_symbol_table);
+                    offset+= offset2;
+                    //set the location to the original location plus the gained offset
+                    it2 += offset2 - 1; sym = *it2;
+                    // cout << "SYM after Assign : " << sym.token_type << endl;
+                    // cout << "SYM : " << sym.token_type << endl;
+                }
+                else{
+                    cout << "ERROR : Unexpected token " << sym.token_type << endl;
+                    exit(-1);
+                }
+            }
+            else if(sym.token_type.compare("write_sym") == 0 || sym.token_type.compare("read_sym") == 0){
+                offset2 += handle_io(fout_icg, it2, icg_symbol_table);
+                offset += offset2;
+                it2+= offset2;
+                sym = *it2;
+            }
+            else if(sym.token_type.compare("writeln_sym") == 0 || sym.token_type.compare("readln_sym") == 0){
+                // cout << "SYM before WRITELN " << sym.token_type << endl;
+                offset2 += handle_io(fout_icg, it2, icg_symbol_table);
+                offset += offset2;
+                it2+= offset2-1;
+                sym = *it2;
+                // cout << "SYM AFTER WRITELN " << sym.token_type << endl;
+            }
+            else if(sym.token_type.compare("end_sym") == 0){
+                it2++;offset++;sym=*it2;
+                if((sym.token_type.compare("else_sym")==0) || (sym.token_type.compare("else_if_sym") == 0)){
+                    it2++;offset++;sym=*it2;
+                    while(1){
+                        if(sym.token_type.compare("end_sym")==0){
+                            // cout << "BEFORE RETURN : " << sym.token_type << endl;
+                            // it2++;offset++;sym=*it2;
+                            // cout << "BEFORE RETURN : " << sym.token_type << endl;
+                            cout << "               Leaving If-Else Section" << endl;
+                            cout << "---------------------------------------------------\n";
+                            return offset;
+                        }else { it2++;offset++;sym=*it2; }
+                    }
+                }
+                else{
+                    cout << "               Leaving If-Else Section" << endl;
+                    cout << "---------------------------------------------------\n";
+                    return offset;
+                }
+                //Skip the else section
+            }
+            else{
+                cout << "ERROR : Invalid Token : "<< sym.token_type << endl;
+                it2++;offset++;
+                sym = *it2;
+            }
+        }
+    }
+    else{
+        cout << "RETURNED FALSE" << endl;
+        //SKIP THE PORTION FOR IF STATEMENT
+        if(sym.token_type.compare("begin_sym") == 0){
+            while(1){
+                if(sym.token_type.compare("end_sym") == 0 ){
+                    it2++;offset++;sym = *it2;
+                    break;
+                }else {it2++;offset++;sym=*it2;}
+            }
+        }
+        else{
+            cout << "NO BEGIN STATEMENT" << endl;
+            return offset;
+        }
+        if(sym.token_type.compare("else_sym")== 0){
+            // cout << "IN ELSE " << endl;
+            it2++;offset++; sym= *it2;
+            if(sym.token_type.compare("begin_sym")==0){
+                // cout << "IN BEGIN SECTION" << endl;
+                it2++;offset++; sym = *it2;
+                while(1){
+                    if(sym.token_type.compare("end_sym") == 0){
+                        offset++;
+                        break;
+                    }
+                    else{
+                        // cout << "IN WHILE " << sym.token_type << endl;
+                        if((sym.token_type.compare("identifier") == 0) || (sym.token_type.compare("litchar") == 0))
+                        {
+                            // cout << "HERE " << endl;
+                            // cout << sym.token_type << " : " << sym.value << endl;
+                            it2++;offset++;
+                            sym = *it2;
+                            if(sym.token_type.compare("assign") == 0){
+                                // cout << " IN ASSIGN " << endl;
+                                if(it2 != icg_symbol_table.begin()){
+                                    it_prev = it2-1;
+                                    sym = *it_prev;
+                                    // cout << "IT_PREV AFTER ASSIGN SYM DETECTED : " << sym.token_type<<endl;
+                                }
+                                if((it2+1) != icg_symbol_table.end()){
+                                    it_next = it2+1;
+                                    sym = *it_next;
+                                    // cout << "IT_PREV AFTER ASSIGN SYM DETECTED : " << sym.token_type<<endl;
+                                }
+                                sym = *it_prev;
+                                sym = *it_next;
+                                offset2 += handle_assignment(fout_icg, it_prev, it_next, icg_symbol_table);
+                                offset+= offset2;
+                                //set the location to the original location plus the gained offset
+                                it2 += offset2 - 1; sym = *it2;
+                                // cout << "SYM : " << sym.token_type << endl;
+                            }
+                            else{
+                                cout << "ERROR : Unexpected token " << sym.token_type << endl;
+                                exit(-1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        //NOT REQUIRED BUT I HANDLED IT IN LEXOR SO I ADDED IT HERE AS WELL 
+        else if(sym.token_type.compare("else_if_sym") == 0){
+            cout << "ELSE IF - ERROR : currently unsupported" << endl;
+            it2++;offset++; sym= *it2;
+            exit(0);
+        }
+        else{
+            cout << "NO ELSE-type STATEMENTS" << endl;
+        }
+    }
+    cout << "               Leaving If-Else Section" << endl;
+    cout << "---------------------------------------------------\n";
+    return offset;
+}

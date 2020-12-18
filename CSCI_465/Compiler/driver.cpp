@@ -44,7 +44,7 @@ int main(int argc, char * argv []){
 
     for(vector<string>::iterator it = symbols.begin(); it < symbols.end(); ++it){
         string temp = *it;
-        // cout << "SYM : " << temp << endl;
+        cout << "SYM : " << temp << endl;
     }
 
     //Classify the raw symbols and remove unnecessary symbols
@@ -86,10 +86,9 @@ int main(int argc, char * argv []){
     cout << "---------------------------------------------------"<<endl;
     cout << "       Beginning Final Code Generation " << endl;
     fcg_driver();
-
-
-
-    
+    cout << "---------------------------------------------------"<<endl;
+    cout << "       Final Code Generation Complete" << endl;
+    cout << "---------------------------------------------------"<<endl;
 
     return 0;
 }

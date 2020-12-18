@@ -15,7 +15,7 @@
 using namespace std;
 //Definitions
 string make_lowercase(string in);
-regex regex_identifier ("([_a-zA-Z])([a-zA-Z0-9]*){20}");
+regex regex_identifier ("([_a-zA-Z])([a-zA-Z0-9]*)(\133[0-9+]\135)*{20}");
 regex regex_number ("([0-9]*)");
 string symbols = ".,:;()[]{}";
 string operators = "+-*/";
@@ -116,6 +116,7 @@ vector <string> generate_symbols(char * raw_input){
 	string temp_print_string;
 	for (int i = 0; i < num_char; i ++){
 	    temp = raw_input[i];
+		// cout << temp << endl;
 		if((i+1) < num_char){
 			temp_look_ahead = raw_input[i+1];
 			//cout << temp_look_ahead << endl;
@@ -159,7 +160,12 @@ vector <string> generate_symbols(char * raw_input){
 		//check if temp is in the set of the special characters
 		else if(symbols.find(temp) != std::string::npos){
 			if(temp_word != " " && temp_word != ""){
-				//cout << temp_word << endl;
+				// cout <<"TEMP1 : : "<< temp_word << endl;
+				// cout << "TEMP1 LA: " << temp_look_ahead << endl;
+				// if(temp_look_ahead == '['){
+				// 	cout << temp_look_ahead << endl;
+				// }
+
 				symbol_vec.push_back(temp_word);
 			}
 			if(temp == ':' && temp_look_ahead == '='){
@@ -172,6 +178,9 @@ vector <string> generate_symbols(char * raw_input){
 				continue;
 			}
 			else if(temp != ' ') {
+
+				// cout <<"TEMP2 : : "<< temp << endl;
+				// cout << "TEMP2 LA: " << temp_look_ahead << endl;
 				string temp_string ({temp});
 				//cout << temp_string << endl;
 				symbol_vec.push_back(temp_string);
@@ -249,7 +258,7 @@ vector <string> generate_symbols(char * raw_input){
 			}
 			else if(temp != ' '){
 				string temp_string ({temp});
-				//cout << temp_string << endl;
+				// cout <<"LAST ELIF: " << temp_string << endl;
 				symbol_vec.push_back(temp_string);
 			}
 			temp_word = "";
@@ -641,8 +650,42 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 			}
 
 			else if(regex_match(value, regex_identifier)){
-				s.token_type = "identifier";
-				symbol_table.push_back(s);
+				string temp_id = value;
+				if(value_look_ahead == "["){
+					temp_id.append(value_look_ahead);
+					it++;i++;
+					value_look_ahead = *(it+1);
+					if(regex_match(value_look_ahead, regex("([0-9]*)"))){
+						temp_id.append(value_look_ahead);
+						it++;i++;
+						value_look_ahead = *(it+1);
+						if(value_look_ahead == "]"){
+							temp_id.append(value_look_ahead);
+							cout << temp_id << endl;	
+							it++;i++;
+							s.value = temp_id;
+							s.token_type = "identifier";
+							symbol_table.push_back(s);
+						}
+					}
+					if(regex_match(value_look_ahead,regex_identifier)){
+						temp_id.append(value_look_ahead);
+						it++;i++;
+						value_look_ahead = *(it+1);
+						if(value_look_ahead == "]"){
+							temp_id.append(value_look_ahead);
+							cout << temp_id << endl;
+							it++;i++;
+							s.value = temp_id;
+							s.token_type = "identifier";
+							symbol_table.push_back(s);
+						}
+					}
+				}
+				else{
+					s.token_type = "identifier";
+					symbol_table.push_back(s);
+				}
 				////cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;;
 			}
 			else if(regex_match(value, regex_number)){
@@ -658,7 +701,7 @@ vector<symbol> classify_symbols(vector<string> symbol_array, vector<symbol> symb
 			else if(regex_match(value, regex("\'([a-zA-Z0-9]+)\'") )){
 				s.token_type = "quotestring";
 				symbol_table.push_back(s);
-				cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
+				//cout << left << setw(width) << s.token_type <<  " -->    " << s.value << endl;
 			}
 			else if(i == size-1){
 				s.token_type = "eofsym";
